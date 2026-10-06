@@ -1,18 +1,21 @@
 @base = http://localhost:8080
 
-### 1. 注册（再次执行应为 409）
+### Phase 1
+GET {{base}}/hello
+
+### 注册；确认返回 id 与 CURRENT_USER_ID 相同
 POST {{base}}/user/register
 Content-Type: application/json
 
 {"username":"tom","password":"123456"}
 
-### 2. 登录，HTTP Client 自动保存 Session Cookie
+### 登录；只验证密码，不创建会话
 POST {{base}}/user/login
 Content-Type: application/json
 
 {"username":"tom","password":"123456"}
 
-### 3. 添加书籍，将返回 ID 保存为 bookId
+### 添加书籍
 POST {{base}}/books
 Content-Type: application/json
 
@@ -20,32 +23,26 @@ Content-Type: application/json
 
 > {% client.global.set("bookId", response.body.data.id); %}
 
-### 4. 修改进度
+### 阅读中
+PUT {{base}}/books/{{bookId}}/progress
+Content-Type: application/json
+
+{"readPages":25}
+
+### 读完
 PUT {{base}}/books/{{bookId}}/progress
 Content-Type: application/json
 
 {"readPages":100}
 
-### 5. 单本详情
+### 详情
 GET {{base}}/books/{{bookId}}
 
-### 6. 分页列表
+### 分页
 GET {{base}}/books?page=1&size=2
 
-### 7. 搜索
-GET {{base}}/books/search?keyword=Java
-
-### 8. 统计
-GET {{base}}/books/stats
-
-### 9. 删除
+### 删除
 DELETE {{base}}/books/{{bookId}}
 
-### 10. 删除后查询应为 404
+### 删除后查询应为 404
 GET {{base}}/books/{{bookId}}
-
-### 11. 注销
-POST {{base}}/user/logout
-
-### 12. 注销后查询应为 401
-GET {{base}}/books

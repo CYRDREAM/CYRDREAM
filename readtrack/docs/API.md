@@ -1,101 +1,52 @@
-# ReadTrack API
+# 基础版接口
 
-基础地址：`http://localhost:8080`。请求体统一使用 `Content-Type: application/json`。
+地址：`http://localhost:8080`。POST/PUT 使用 JSON 请求体和 `Content-Type: application/json`。
 
-成功和失败统一为：
+| 方法 | 路径 | 请求 | 结果 |
+|---|---|---|---|
+| GET | `/hello` | 无 | Hello JSON |
+| POST | `/user/register` | username、password | 新用户 id 和 username，201 |
+| POST | `/user/login` | username、password | 验证结果，200 |
+| POST | `/books` | title、author（可选）、totalPages | 添加后的书籍，201 |
+| PUT | `/books/{id}/progress` | readPages | 更新后的书籍，200 |
+| DELETE | `/books/{id}` | 无 | 删除结果，200 |
+| GET | `/books/{id}` | 无 | 书籍详情，200 |
+| GET | `/books?page=1&size=10` | 查询参数 | items、total、page、size，200 |
 
-```json
-{"message":"操作说明","data":null}
-```
+用户名最长 50，密码最长 255，二者不能空白。用户名去除首尾空白、不能重复。
 
-`data` 在有返回值时为对象。注册和添加书籍返回 HTTP 201，其余成功返回 200。参数错误 400、未登录或登录失败 401、书籍不存在/无权访问 404、重复用户名 409、非预期服务错误 500。
-
-## 注册和登录
-
-`POST /user/register` 与 `POST /user/login`：
+注册/登录请求：
 
 ```json
 {"username":"tom","password":"123456"}
 ```
 
-成功：
+成功示例：
 
 ```json
-{"message":"登录成功","data":{"id":1,"username":"tom"}}
+{"message":"注册成功","data":{"id":1,"username":"tom"}}
 ```
 
-登录时响应头包含 `Set-Cookie: JSESSIONID=...`。后续请求必须携带该 Cookie；IDEA HTTP Client、Postman、Apifox通常可以自动保存和发送。不同用户测试时使用独立 Cookie 会话。密码不出现在响应中。
+没有 Cookie、Token 或会话。登录只是校验，书籍请求始终模拟 `CURRENT_USER_ID`。
 
-`GET /user/me` 查询会话用户；`POST /user/logout` 使当前会话失效。
-
-## 添加书籍
-
-`POST /books`（需登录）：
+添加书籍：
 
 ```json
 {"title":"Java 入门","author":"示例作者","totalPages":100}
 ```
 
-成功示例（ID 和时间由服务生成）：
-
-```json
-{"message":"添加成功","data":{"id":1,"title":"Java 入门","author":"示例作者","totalPages":100,"readPages":0,"status":"UNREAD","userId":1,"createdAt":"2026-10-01T12:00:00"}}
-```
-
-`author` 可省略，书名不能为空，所有 JSON 字段使用 camelCase；数据库列采用 snake_case。
-
-## 阅读进度
-
-`PUT /books/1/progress`：
+更新进度：
 
 ```json
 {"readPages":25}
 ```
 
-返回更新后的完整书籍。0 页为 `UNREAD`，达到总页数为 `READ`，中间为 `READING`。负数、超出总页数或缺少参数返回 400。
+书籍返回字段：id、title、author、totalPages、readPages、status、userId、createdAt。初始 readPages=0、status=UNREAD。0 页为 UNREAD，全部读完为 READ，中间为 READING。
 
-## 详情与删除
+分页从 1 开始，每页 1–100 条；按创建时间倒序，同时间再按 id 倒序。total 是该用户书籍总数，items 是当前页列表。
 
-- `GET /books/1`：返回完整书籍。
-- `DELETE /books/1`：返回 `{"message":"删除成功","data":null}`。
-- 删除后再查返回 404；其他用户无法查询、删除或修改该书。
+常见错误：参数不合法 400、登录密码不匹配 401、重复用户名 409、书籍不存在或属于他人 404。错误采用 Spring Boot 默认格式，与成功响应结构不同；业务错误的 message 包含原因。
 
-## 分页与搜索
+新数据库需先注册。若当前模拟用户不存在，添加书籍返回 400，并提示配置 CURRENT_USER_ID。
 
-`GET /books?page=1&size=10`：
-
-```json
-{"message":"查询成功","data":{"items":[],"total":0,"page":1,"size":10}}
-```
-
-`items` 包含完整书籍对象；`total` 是当前用户匹配书籍总量，而不是本页条数。无数据时返回空列表。按 `created_at DESC, id DESC` 排序。
-
-`GET /books/search?keyword=Java&page=1&size=10` 返回同样结构，查询条件为书名包含关键词。关键词可省略，最多 200 字；URL 中中文和特殊字符须编码。
-
-## 阅读统计
-
-`GET /books/stats`：
-
-```json
-{"message":"查询成功","data":{"total":3,"unread":1,"reading":1,"read":1}}
-```
-
-只统计当前会话用户的数据。
-
-## PowerShell 测试
-
-以下命令为 Windows PowerShell 5.1/PowerShell 7 通用写法。`-WebSession` 让请求带上登录 Cookie。
-
-```powershell
-$base = 'http://localhost:8080'
-$account = @{ username = 'tom'; password = '123456' } | ConvertTo-Json
-Invoke-RestMethod "$base/user/register" -Method Post -ContentType 'application/json' -Body $account
-Invoke-RestMethod "$base/user/login" -Method Post -ContentType 'application/json' -Body $account -SessionVariable login
-$body = @{ title = 'Java'; author = 'Example'; totalPages = 100 } | ConvertTo-Json
-$book = Invoke-RestMethod "$base/books" -Method Post -ContentType 'application/json' -Body $body -WebSession $login
-$id = $book.data.id
-Invoke-RestMethod "$base/books/$id/progress" -Method Put -ContentType 'application/json' -Body '{"readPages":100}' -WebSession $login
-Invoke-RestMethod "$base/books?page=1&size=10" -WebSession $login
-Invoke-RestMethod "$base/books/stats" -WebSession $login
-Invoke-RestMethod "$base/books/$id" -Method Delete -WebSession $login
-```
+权限测试可在测试数据库创建第二个用户和属于该用户的书，然后用该书 ID 请求详情、进度和删除，均应返回 404。注册第二个用户并登录不会切换模拟用户，这是 Phase 3 的限制。

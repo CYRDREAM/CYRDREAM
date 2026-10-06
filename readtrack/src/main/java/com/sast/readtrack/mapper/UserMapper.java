@@ -3,6 +3,8 @@ import com.sast.readtrack.model.User;
 import org.apache.ibatis.annotations.*;
 @Mapper
 public interface UserMapper {
+    @Select("SELECT id, username, password FROM rt_users WHERE id = #{id}")
+    User findById(@Param("id") long id);
     @Select("SELECT id, username, password FROM rt_users WHERE username = #{username}")
     User findByUsername(@Param("username") String username);
     @Insert("INSERT INTO rt_users(username,password) VALUES(#{username},#{password})")

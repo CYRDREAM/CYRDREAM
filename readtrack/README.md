@@ -1,19 +1,5 @@
 # ReadTrack 阅读管理系统
-
-2026 SAST 后端组免试题基础版，实现 Phase 1、2、3。使用 Java 17、Spring Boot 4.1.1、MyBatis 和 MySQL 8.4。
-
-开发使用了 AI 辅助，代码学习和说明见 [代码思路](docs/CODE_GUIDE.md)。
-
-## 功能
-
-| 阶段 | 内容 |
-|---|---|
-| Phase 1 | `/hello` 返回 Hello JSON |
-| Phase 2 | 注册、重复用户名检查、登录校验 |
-| Phase 3 | 书籍添加、详情、进度修改、删除、分页、用户归属检查 |
-
-基础版按题目允许的方式明文保存密码，登录只验证账号密码。书籍控制器用 `CURRENT_USER_ID = 1L` 模拟用户，登录其他账号不会改变这个 ID。未实现 Phase 4 的 Session/JWT、BCrypt、搜索、统计、全局异常处理和 SpringDoc。
-
+开发使用了 AI 辅助，确实没什么基础，以前学过c++，后端这部分比较感兴趣所以尝试一下，面试的时候下手轻点，后面好好学学
 ## 启动
 
 1. 用 IDEA 打开本目录的 `pom.xml`，加载 Maven，项目 JDK 选择 17、21 或 25。

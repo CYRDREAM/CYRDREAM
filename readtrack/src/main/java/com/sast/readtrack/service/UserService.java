@@ -28,7 +28,6 @@ public class UserService {
         try {
             userMapper.insert(user);
         } catch (DuplicateKeyException e) {
-            // 唯一约束也能拦住同时提交的重复注册。
             throw new ResponseStatusException(HttpStatus.CONFLICT, "用户名已存在");
         }
         return user;

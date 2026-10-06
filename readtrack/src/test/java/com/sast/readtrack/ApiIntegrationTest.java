@@ -13,7 +13,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-/** 真正启动 HTTP 服务与数据库，覆盖题目验收和跨用户访问。 */
 @SpringBootTest(webEnvironment=SpringBootTest.WebEnvironment.RANDOM_PORT, properties={
     "spring.datasource.url=${TEST_DB_URL:jdbc:h2:mem:readtrack;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1}",
     "spring.datasource.username=${TEST_DB_USER:sa}",
@@ -110,7 +109,6 @@ class ApiIntegrationTest {
         assertEquals(first,page2.path("items").get(0).path("id").asLong());
         var added=call(c,"POST","/books",Map.of("title","伪造归属","totalPages",10,"userId",2),201).path("data");
         assertEquals(1,added.path("userId").asLong());
-        // 删除选做接口后，它们不应再返回成功。
         call(c,"GET","/books/search?keyword=Java",null,400);
         call(c,"GET","/books/stats",null,400);
     }

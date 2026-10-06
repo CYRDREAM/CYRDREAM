@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/books")
 public class BookController {
-    // Phase 3 允许用固定 ID 模拟当前用户，并不代表已经实现登录态。
+    // 基础版使用固定用户 ID，未实现登录态。
     private static final long CURRENT_USER_ID = 1L;
     private final BookService bookService;
 
